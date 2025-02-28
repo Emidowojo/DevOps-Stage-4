@@ -1,0 +1,101 @@
+version: '3'
+
+services:
+  traefik:
+    image: traefik:v3.3
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Redirect HTTP to HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # Let's Encrypt configuration
+      - "--certificatesresolvers.leresolver.acme.email=opaluwaamy@gmail.com"
+      - "--certificatesresolvers.leresolver.acme.storage=/etc/traefik/acme.json"
+      - "--certificatesresolvers.leresolver.acme.httpchallenge.entrypoint=web"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./traefik_data:/etc/traefik"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./acme.json:/etc/traefik/acme.json"
+    networks:
+      - localhost_net
+    labels:
+      - "traefik.enable=true"
+
+  app:
+    image: app
+    build: ./frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`missopaluwa.ddns.net`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls.certresolver=leresolver"
+      - "traefik.http.services.app.loadbalancer.server.port=8080"
+    networks:
+      - localhost_net
+    depends_on:
+      - auth-api
+      - todos-api
+      - users-api
+    environment:
+      - PORT=${PORT}
+      - AUTH_API_ADDRESS=https://auth.missopaluwa.ddns.net
+      - TODOS_API_ADDRESS=https://todos.missopaluwa.ddns.net
+
+  auth-api:
+    image: auth-api
+    build: ./auth-api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=Host(`auth.missopaluwa.ddns.net`)"
+      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.routers.auth.tls.certresolver=leresolver"
+      - "traefik.http.services.auth.loadbalancer.server.port=8081"
+    networks:
+      - localhost_net
+    environment:
+      - AUTH_API_PORT=${AUTH_API_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - USERS_API_ADDRESS=https://users.missopaluwa.ddns.net
+
+  todos-api:
+    image: todos-api
+    build: ./todos-api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.todos.rule=Host(`todos.missopaluwa.ddns.net`)"
+      - "traefik.http.routers.todos.entrypoints=websecure"
+      - "traefik.http.routers.todos.tls.certresolver=leresolver"
+      - "traefik.http.services.todos.loadbalancer.server.port=8082"
+    networks:
+      - localhost_net
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+
+  users-api:
+    image: users-api
+    build: ./users-api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.users.rule=Host(`users.missopaluwa.ddns.net`)"
+      - "traefik.http.routers.users.entrypoints=websecure"
+      - "traefik.http.routers.users.tls.certresolver=leresolver"
+      - "traefik.http.services.users.loadbalancer.server.port=8083"
+    networks:
+      - localhost_net
+    environment:
+      - SERVER_PORT=${SERVER_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+
+  # ... (keep the redis, log-message-processor, etc. unchanged)
+
+networks:
+  localhost_net:
+    external: true
