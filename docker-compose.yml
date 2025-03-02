@@ -25,7 +25,7 @@ services:
     - "traefik.enable=true"
     - "traefik.http.routers.app.rule=Host(`emidowojo.site`)"
     - "traefik.http.routers.app.entrypoints=websecure"
-    # - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+    - "traefik.http.routers.frontend.tls.certresolver=myresolver"
     - "traefik.http.services.app.loadbalancer.server.port=8080"
     networks:
       - localhost_net
@@ -48,7 +48,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.auth.rule=Host(`auth.emidowojo.site`)"
       - "traefik.http.routers.auth.entrypoints=websecure"
-      # - "traefik.http.routers.auth.tls.certresolver=myresolver"
+      - "traefik.http.routers.auth.tls.certresolver=myresolver"
       - "traefik.http.services.auth.loadbalancer.server.port=8081"
     networks:
       - localhost_net
@@ -68,7 +68,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.todos.rule=Host(`todos.emidowojo.site`)"
       - "traefik.http.routers.todos.entrypoints=websecure"
-      # - "traefik.http.routers.auth.tls.certresolver=myresolver"
+      - "traefik.http.routers.auth.tls.certresolver=myresolver"
       - "traefik.http.services.todos.loadbalancer.server.port=8082"
     networks:
       - localhost_net
@@ -89,7 +89,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.users.rule=Host(`users.emidowojo.site`)"
       - "traefik.http.routers.users.entrypoints=websecure"
-      # - "traefik.http.routers.users.tls.certresolver=myresolver"
+      - "traefik.http.routers.users.tls.certresolver=myresolver"
       - "traefik.http.services.users.loadbalancer.server.port=8083"
     networks:
       - localhost_net
